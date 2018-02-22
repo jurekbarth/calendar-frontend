@@ -42,6 +42,21 @@ const Next = ({ onClick }) => (
   </div>
 );
 
+const Close = ({ onClick }) => (
+  <div className="close-button" onClick={onClick}>
+    <svg
+      fill="#ffffff"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+      <path d="M0 0h24v24H0z" fill="none" />
+    </svg>
+  </div>
+);
+
 const setupDataStructure = date => {
   const { startDay, endDay } = getDates(date);
   const arr = [];
@@ -67,6 +82,24 @@ const setupDataStructure = date => {
       day,
       events: [],
       formatted: getFormatted(day)
+    });
+  }
+  return arr;
+};
+
+const setupListStructure = date => {
+  const { startDay, endDay } = getDates(date);
+  const arr = [];
+  let days = 34;
+  const delta = differenceInDays(endDay, startDay);
+  if (delta > 40) {
+    days = 41;
+  }
+  for (let i = 0; i <= days; i++) {
+    const day = addDays(startDay, i);
+    arr.push({
+      day,
+      events: []
     });
   }
   return arr;
@@ -106,6 +139,34 @@ const mapEventsToStructure = (arr, events) => {
   return arr;
 };
 
+const mapEventsToListStructure = (arr, events) => {
+  for (let day of arr) {
+    const currentDay = new Date(day.day);
+    const nextDay = addDays(currentDay, 1);
+    // debugger;
+    for (let entry of events) {
+      const eventStart = new Date(entry.start);
+      const eventEnd = new Date(entry.end);
+      if (eventStart >= currentDay && eventEnd <= nextDay) {
+        day.events.push(entry);
+      } else if (
+        eventStart >= currentDay &&
+        eventEnd.setHours(0, 0, 0, 0) <= nextDay &&
+        entry.type === "day"
+      ) {
+        day.events.push(entry);
+      } else if (
+        eventStart < nextDay &&
+        entry.type === "multiday" &&
+        eventEnd > currentDay
+      ) {
+        day.events.push(entry);
+      }
+    }
+  }
+  return arr;
+};
+
 const getDates = date => {
   const month = getMonth(date);
   const start = startOfMonth(date);
@@ -132,7 +193,9 @@ class App extends Component {
     super();
     this.state = {
       data: null,
-      date: new Date()
+      date: new Date(),
+      overlay: false,
+      listView: true
     };
     this.handleToday = this.handleToday.bind(this);
     this.handleControls = this.handleControls.bind(this);
@@ -149,14 +212,65 @@ class App extends Component {
       .then(json => this.setState({ data: json }))
       .catch(err => console.log(err));
   }
-  renderEvent(id, timeStr, summary, type, next, style = null) {
+  handleOverlay(ev = null) {
+    this.setState(prevState => {
+      return { overlay: !prevState.overlay, overlayData: ev };
+    });
+  }
+  renderOverlay() {
+    const data = this.state.overlayData;
+    const { summary, start, end, type, description } = data;
+    const timeStr = (
+      <p className="overlay-time">
+        {format(new Date(start), "HH:mm", { locale: de })} -{" "}
+        {format(new Date(end), "HH:mm", { locale: de })}
+      </p>
+    );
+    let dateStr = (
+      <p className="overlay-date">
+        {format(new Date(start), "dddd, D. MMMM", { locale: de })}
+      </p>
+    );
+    if (type === "multiday") {
+      dateStr = (
+        <p className="date">
+          {format(new Date(start), "D. MMM", { locale: de })} -{" "}
+          {format(new Date(end), "D. MMM", { locale: de })}
+        </p>
+      );
+    }
+    return (
+      <div className="overlay">
+        <div
+          className="overlay-background"
+          onClick={() => this.handleOverlay()}
+        />
+        <div className="overlay-contents">
+          <Close onClick={() => this.handleOverlay()} />
+          <div className="overlay-headline">
+            <h2>{data.summary}</h2>
+          </div>
+          <div className="overlay-content">
+            {dateStr}
+            {type === "normal" ? timeStr : null}
+            {description.length > 0 ? (
+              <p className="overlay-description">{description}</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  renderEvent(ev, timeStr, summary, next, style = null) {
+    const { id, type } = ev;
     return (
       <div
         key={id}
         style={style}
         className={`event ${type} ${next ? "next" : ""}`}
+        onClick={() => this.handleOverlay(ev)}
       >
-        {timeStr}
+        <span>{timeStr}</span>
         {summary}
       </div>
     );
@@ -170,15 +284,15 @@ class App extends Component {
       height: `${slots.length * 24}px`
     };
     for (let ev of dayObject.events) {
-      const { id, type } = ev;
+      const { type } = ev;
       let summary = ev.summary;
       let timeStr = null;
       let next = false;
       if (type === "normal") {
         timeStr = format(ev.start, "HH:mm");
-        normal.push(this.renderEvent(id, timeStr, summary, type, next));
+        normal.push(this.renderEvent(ev, timeStr, summary, next));
       } else if (type === "day") {
-        day.push(this.renderEvent(id, timeStr, summary, type, next));
+        day.push(this.renderEvent(ev, timeStr, summary, next));
       } else {
         const multidayStyles = {
           top: `${slots.indexOf(ev.id) === 0 ? 1 : slots.indexOf(ev.id) * 24}px`
@@ -200,7 +314,7 @@ class App extends Component {
           summary = null;
         }
         multiday.push(
-          this.renderEvent(id, timeStr, summary, type, next, multidayStyles)
+          this.renderEvent(ev, timeStr, summary, next, multidayStyles)
         );
       }
     }
@@ -268,16 +382,93 @@ class App extends Component {
       });
     }
   }
-  render() {
-    if (this.state.data === null) {
-      return <p>loading</p>;
-    }
-
+  toggleListView() {
+    this.setState(prevState => {
+      return { listView: !prevState.listView };
+    });
+  }
+  renderMonth() {
     const events = this.state.data;
     const date = this.state.date;
     const structure = setupDataStructure(date);
     const arr = mapEventsToStructure(structure, events);
-    const currenDate = format(this.state.date, "MMMM YYYY", { locale: de });
+    return (
+      <div className="days">
+        {arr.map((row, index) =>
+          row.days.map((el, i) => (
+            <div
+              className={`week-day slot-${i} ${
+                arr.length - 1 === index ? "last-row" : ""
+              }  ${this.futureDate(el)}`}
+              key={`${el.number}${el.day}${index}-${i}`}
+            >
+              <div className={`week-day-name row-${index}`}>
+                {el.formatted.day}
+              </div>
+              {this.renderDayNumer(el)}
+              {this.renderEvents(el, i, arr, index)}
+            </div>
+          ))
+        )}
+        {this.state.overlay ? this.renderOverlay() : null}
+      </div>
+    );
+  }
+  renderList() {
+    const events = this.state.data;
+    const date = this.state.date;
+    const structure = setupListStructure(date);
+    const data = mapEventsToListStructure(structure, events);
+    console.log(data);
+    return (
+      <div className="listView">
+        {data.map(day => {
+          if (day.events.length === 0) return;
+          return (
+            <div className="list-item">
+              <div className="list-item-day">
+                <p className="list-item-day-part1">
+                  {format(day.day, "dd", { locale: de })}
+                </p>
+                <div className="list-item-day-part2">
+                  {format(day.day, "DD. MMM", { locale: de })}
+                </div>
+              </div>
+              <div className="list-item-events">
+                {day.events.map(ev => {
+                  console.log("test");
+                  let timeStr = "Ganztägig";
+                  if (ev.type === "normal") {
+                    timeStr = `${format(
+                      new Date(ev.start),
+                      "HH:mm"
+                    )} - ${format(new Date(ev.end), "HH:mm")}`;
+                  }
+                  return (
+                    <div className="list-item-event">
+                      <div className="list-item-event-time">{timeStr}</div>
+                      <div className="list-item-event-content">
+                        <h2>{ev.summary}</h2>
+                        {ev.description.length > 0 ? (
+                          <p>{ev.description}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  render() {
+    if (this.state.data === null) {
+      return <p>loading</p>;
+    }
+    const { listView } = this.state;
+    const currentDate = format(this.state.date, "MMMM YYYY", { locale: de });
     return (
       <div className="wrapper">
         <div className="calendar-container">
@@ -289,26 +480,15 @@ class App extends Component {
               <Prev onClick={() => this.handleControls("prev")} />
               <Next onClick={() => this.handleControls("next")} />
             </div>
-            <div className="current">{currenDate}</div>
+            <div className="current">{currentDate}</div>
+            <button
+              className="button small"
+              onClick={() => this.toggleListView()}
+            >
+              {listView ? "Monat" : "Liste"}
+            </button>
           </header>
-          <div className="days">
-            {arr.map((row, index) =>
-              row.days.map((el, i) => (
-                <div
-                  className={`week-day slot-${i} ${
-                    arr.length - 1 === index ? "last-row" : ""
-                  }  ${this.futureDate(el)}`}
-                  key={`${el.number}${el.day}${index}-${i}`}
-                >
-                  <div className={`week-day-name row-${index}`}>
-                    {el.formatted.day}
-                  </div>
-                  {this.renderDayNumer(el)}
-                  {this.renderEvents(el, i, arr, index)}
-                </div>
-              ))
-            )}
-          </div>
+          {listView ? this.renderList() : this.renderMonth()}
         </div>
       </div>
     );

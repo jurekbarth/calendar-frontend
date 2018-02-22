@@ -34,6 +34,7 @@ header > p {
 .days {
   display: flex;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .days > div {
@@ -58,6 +59,7 @@ header > p {
   height: 100%;
   background-color: rgba(255, 255, 255, 0.4);
   z-index: 1000;
+  pointer-events: none;
 }
 
 .slot-6 {
@@ -109,22 +111,31 @@ header > p {
 .event {
   height: 20px;
   position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .event.normal {
-  margin: 2px 2px 2px 1.5em;
+  margin: 2px 2px 2px 2px;
   padding: 0.2em;
+}
+
+.event.normal span {
+  margin-left: 1.5em;
+  margin-right: 2px;
 }
 
 .event.normal::before {
   content: "";
   position: absolute;
   top: 6px;
-  left: -10px;
+  left: 6px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background-color: var(--main-color);
+  z-index: 10;
 }
 
 .event.day {
@@ -143,24 +154,18 @@ header > p {
   width: 100%;
 }
 
-.event.next::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: -1px;
-  height: 100%;
-  width: 1px;
-  background-color: var(--main-color);
-  z-index: 100;
+.event.next {
+  width: calc(100% + 1px);
+  z-index: 20;
 }
 
-.week-day.past .event.next::after {
-  /* thats super faky */
-  background-color: #90c18e;
+.week-day.past .event.next {
+  width: 100%;
 }
 
 .multiday-container {
   position: relative;
+  top: 1px;
 }
 
 .event-container {
@@ -177,7 +182,6 @@ header > p {
   align-items: center;
   padding: 1em;
   width: 100%;
-  max-width: 350px;
 }
 
 .controls {
@@ -223,6 +227,133 @@ header > p {
   cursor: pointer;
 }
 
+.button.small {
+  text-transform: none;
+}
+
 .current {
-  flex: 0 0 180px;
+  flex: 0 1 180px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 2000;
+}
+
+.overlay-contents {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  max-width: 450px;
+  height: 50%;
+  max-height: 270px;
+  transform: translate(-50%, -50%);
+  z-index: 3000;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay-headline {
+  flex: 1 1 45%;
+  display: flex;
+  align-items: flex-end;
+  padding: 1em;
+  background-color: var(--main-color);
+}
+
+.overlay-headline h2 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.3rem;
+}
+
+.overlay-content {
+  flex: 1 1 55%;
+  padding: 1em;
+}
+
+.close-button {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  cursor: pointer;
+}
+
+.overlay-date {
+  margin: 0;
+}
+.overlay-time {
+  margin: 0.5em 0 0 0;
+  font-size: 14px;
+  color: #868e96;
+}
+
+.overlay-description {
+  line-height: 1.3;
+  font-size: 14px;
+}
+
+.list-item {
+  display: flex;
+  border-bottom: 1px solid var(--grey-color);
+  padding: 0.5em;
+  font-size: 14px;
+}
+
+.list-item-day {
+  flex: 0 0 70px;
+}
+
+.list-item-day-part1 {
+  margin: 0;
+}
+
+.list-item-day-part2 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.list-item-events {
+  flex: 1 1 100%;
+}
+
+.list-item-event {
+  display: flex;
+  margin-bottom: 0.5em;
+}
+
+.list-item-event-time {
+  flex: 0 0 100px;
+}
+
+.list-item-event-content {
+  flex: 1 1;
+}
+
+.list-item-event-content h2 {
+  font-weight: 400;
+  font-size: 14px;
+  margin: 0;
+}
+
+.list-item-event-content p {
+  font-size: 12px;
+  line-height: 1.3;
+  margin: 0;
 }
