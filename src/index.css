@@ -1,0 +1,228 @@
+:root {
+  --main-color: #3a9a39;
+  --grey-color: #ddd;
+  --text-color: #212121;
+  --active-color: #228be6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+}
+
+.container {
+  width: 100%;
+}
+
+header {
+  display: flex;
+}
+
+header > p {
+  flex: 1 1 100%;
+  text-align: center;
+  border: 1px solid red;
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.days > div {
+  flex: 1 1 14%;
+}
+
+.week-day {
+  border-top: 1px solid #e9ecef;
+  border-left: 1px solid #e9ecef;
+  height: 8rem;
+  padding: 0.5rem 0;
+  font-size: 12px;
+  position: relative;
+}
+
+.week-day.past::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.4);
+  z-index: 1000;
+}
+
+.slot-6 {
+  border-right: 1px solid #e9ecef;
+}
+
+.last-row {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.week-day-name {
+  display: none;
+}
+
+.week-day-name.row-0 {
+  display: block;
+  padding: 0.5em;
+}
+
+.week-day-number {
+  padding: 0 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.week-day-number h2 {
+  font-size: 12px;
+  font-weight: 400;
+  display: inline-block;
+  position: relative;
+  margin: 0;
+}
+
+.week-day-number.active h2 {
+  color: white;
+}
+
+.week-day-number.active h2:before {
+  content: "";
+  background-color: var(--active-color);
+  position: absolute;
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+.event {
+  height: 20px;
+  position: relative;
+}
+
+.event.normal {
+  margin: 2px 2px 2px 1.5em;
+  padding: 0.2em;
+}
+
+.event.normal::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: -10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--main-color);
+}
+
+.event.day {
+  background-color: var(--main-color);
+  color: white;
+  margin: 2px;
+  padding: 0.2em;
+}
+
+.event.multiday {
+  background-color: var(--main-color);
+  color: white;
+  margin: 0;
+  padding: 0.2em;
+  position: absolute;
+  width: 100%;
+}
+
+.event.next::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -1px;
+  height: 100%;
+  width: 1px;
+  background-color: var(--main-color);
+  z-index: 100;
+}
+
+.week-day.past .event.next::after {
+  /* thats super faky */
+  background-color: #90c18e;
+}
+
+.multiday-container {
+  position: relative;
+}
+
+.event-container {
+  position: relative;
+}
+
+.rest-container {
+  position: absolute;
+  width: 100%;
+}
+
+.control-header {
+  display: flex;
+  align-items: center;
+  padding: 1em;
+  width: 100%;
+  max-width: 350px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-around;
+  flex: 0 0 80px;
+}
+
+.control-button {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-button:hover {
+  cursor: pointer;
+}
+
+.control-button:hover::before {
+  content: "";
+  background-color: #f1f3f5;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.button {
+  color: var(--text-color);
+  border: none;
+  background-color: #f1f3f5;
+  padding: 0.5em 1em;
+  font-size: 1rem;
+  text-transform: uppercase;
+  border-radius: 0.2em;
+  outline: none;
+  cursor: pointer;
+}
+
+.current {
+  flex: 0 0 180px;
+}
